@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>چک‌لیست خواب و تمرکز</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="خواب و تمرکز">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#F4F5FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12142A" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preload" href="fonts/Vazirmatn.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Vazirmatn";src:url("fonts/Vazirmatn.woff2") format("woff2");font-weight:100 900;font-display:swap}
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+/* Layout: one calm column; a week grid of habits (rows) × days (columns), grouped by goal, then weekly self-ratings with a small trend. Night-indigo ground, dawn-amber accent. */
+:root{
+  --bg:#F4F5FA; --surface:#FFFFFF; --sunk:#E9EBF4; --fg:#1C2036; --muted:#5E6483; --line:#D9DCEA;
+  --accent:#B86E12; --accent-soft:#FBEBD3; --ok:#2F7D5B; --ok-soft:#DDF1E7; --ink:#2E3A78;
+  --font:"Vazirmatn",Tahoma,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12142A; --surface:#1B1E3A; --sunk:#242848; --fg:#E8E9F5; --muted:#A3A7C7; --line:#30355C;
+  --accent:#F0A84A; --accent-soft:#3A2D1C; --ok:#5FD3A0; --ok-soft:#1C3A31; --ink:#A9B6FF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12142A; --surface:#1B1E3A; --sunk:#242848; --fg:#E8E9F5; --muted:#A3A7C7; --line:#30355C;
+  --accent:#F0A84A; --accent-soft:#3A2D1C; --ok:#5FD3A0; --ok-soft:#1C3A31; --ink:#A9B6FF; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.7;margin:0}
+.wrap{max-width:860px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1{font-size:1.75rem;font-weight:800;margin:0;text-wrap:balance;color:var(--ink)}
+h2{font-size:1.15rem;font-weight:700;margin:0;text-wrap:balance}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+header{display:flex;flex-direction:column;gap:8px}
+.status{font-size:.8rem;color:var(--muted)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.weeknav{display:flex;align-items:center;gap:8px}
+button{font-family:inherit;font-size:.9rem;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--sunk);color:var(--fg);padding:6px 12px}
+button:hover{border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.weeklabel{font-weight:700;min-width:11em;text-align:center}
+.filter{display:flex;gap:6px}
+.filter button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums}
+.stat span{font-size:.82rem;color:var(--muted)}
+.grid-wrap{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(0,1fr) repeat(7,36px);align-items:center;gap:4px;padding:8px 14px;border-top:1px solid var(--line)}
+.row.head{background:var(--sunk);border-top:none;position:sticky;top:env(safe-area-inset-top,0px);z-index:2}
+.row.head .d{font-size:.75rem;text-align:center;color:var(--muted);line-height:1.3}
+.row.head .d.today{color:var(--accent);font-weight:700}
+.group{padding:12px 14px 6px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.group h3{margin:0;font-size:.95rem;font-weight:700;color:var(--ink)}
+.group small{color:var(--muted);font-size:.78rem}
+.label{min-width:0;display:flex;flex-direction:column}
+.label .t{font-weight:500}
+.label .h{font-size:.78rem;color:var(--muted)}
+.star{color:var(--accent);font-weight:800;margin-inline-start:4px}
+.cell{display:flex;justify-content:center}
+.cell input{appearance:none;-webkit-appearance:none;width:28px;height:28px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer;display:grid;place-items:center;margin:0}
+.cell input:checked{background:var(--ok);border-color:var(--ok)}
+.cell input:checked::after{content:"";width:8px;height:14px;border:solid var(--surface);border-width:0 3px 3px 0;transform:translateY(-2px) rotate(45deg)}
+.cell input.today{border-color:var(--accent)}
+.row.foot{background:var(--sunk);font-size:.78rem;color:var(--muted)}
+.row.foot .d{text-align:center;font-variant-numeric:tabular-nums}
+@media (max-width:560px){
+  .row{grid-template-columns:repeat(7,minmax(0,1fr));row-gap:6px}
+  .row .label{grid-column:1/-1}
+  .row.head .label,.row.foot .label{display:none}
+  .cell input{width:30px;height:30px}
+}
+.ratings{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.rate{display:grid;grid-template-columns:9em minmax(0,1fr) 2.5em;align-items:center;gap:10px}
+.rate label{font-weight:500}
+.rate output{font-weight:800;font-variant-numeric:tabular-nums;text-align:center;color:var(--accent)}
+.rate input[type=range]{width:100%;accent-color:var(--accent)}
+.rate.unset output{color:var(--muted);font-weight:400}
+@media (max-width:480px){.rate{grid-template-columns:minmax(0,1fr) 2.5em}.rate input{grid-column:1/-1;grid-row:2}}
+.trend{display:flex;flex-direction:column;gap:10px}
+.trow{display:grid;grid-template-columns:9em minmax(0,1fr);gap:10px;align-items:end}
+.bars{display:flex;gap:4px;align-items:flex-end;height:40px;border-bottom:1px solid var(--line)}
+.bars i{flex:1;max-width:28px;background:var(--ink);opacity:.35;border-radius:3px 3px 0 0;min-height:2px}
+.bars i.cur{background:var(--accent);opacity:1}
+.empty{padding:14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:.9rem}
+.tips{background:var(--accent-soft);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:.9rem}
+.tips ul{margin:0;padding-inline-start:1.2em}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+.backup{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.backup .btns{display:flex;flex-wrap:wrap;gap:8px}
+.backup label.btn{font-size:.9rem;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--sunk);padding:6px 12px}
+.install{background:var(--sunk);border-radius:14px;padding:14px 16px;font-size:.9rem;display:flex;flex-direction:column;gap:4px}
+</style>
+</head>
+<body>
+
+
+<div class="wrap" dir="rtl" lang="fa">
+  <header>
+    <h1>چک‌لیست خواب، آرامش و تمرکز</h1>
+    <p class="muted">هر شب کارهایی رو که انجام دادی تیک بزن. آخر هفته به خودت نمره بده. کارهای <span class="star">★</span>دار مهم‌ترین ۵ کار هستن. هر گروه رو از هفته‌ای که کنارش نوشته شروع کن.</p>
+    <p class="status" id="status">همه‌چیز روی همین گوشی ذخیره می‌شه و بدون اینترنت کار می‌کنه.</p>
+  </header>
+
+  <div class="bar">
+    <div class="weeknav">
+      <button id="prev" type="button" aria-label="هفته قبل">→</button>
+      <span class="weeklabel" id="weeklabel">—</span>
+      <button id="next" type="button" aria-label="هفته بعد">←</button>
+      <button id="thisweek" type="button">این هفته</button>
+    </div>
+    <div class="filter" role="group" aria-label="نمایش">
+      <button type="button" id="f-all" aria-pressed="true">همه کارها</button>
+      <button type="button" id="f-top" aria-pressed="false">فقط ۵ کار اصلی</button>
+    </div>
+  </div>
+
+  <section class="summary" aria-label="خلاصه هفته">
+    <div class="stat"><b id="s-week">۰٪</b><span>انجام‌شده در این هفته</span></div>
+    <div class="stat"><b id="s-top">۰ از ۳۵</b><span>تیک‌های ۵ کار اصلی</span></div>
+    <div class="stat"><b id="s-today">۰</b><span>تیک‌های امروز</span></div>
+  </section>
+
+  <section class="grid-wrap" id="grid" aria-label="جدول کارها"></section>
+
+  <section class="ratings" aria-labelledby="rh">
+    <h2 id="rh">نمره این هفته (۰ تا ۱۰)</h2>
+    <p class="muted small">آخر هفته به هر مورد نمره بده. ۱۰ یعنی عالی (برای اضطراب، ۱۰ یعنی کاملاً آرام).</p>
+    <div id="rates"></div>
+    <h2>روند هفته‌ها</h2>
+    <div class="trend" id="trend"></div>
+  </section>
+
+  <aside class="tips">
+    <b>یادت باشه</b>
+    <ul>
+      <li>همه رو یک‌جا شروع نکن. هفته ۱ خواب، هفته ۲ آرامش، از هفته ۳ تمرکز و حافظه.</li>
+      <li>کافئین رو یک‌دفعه قطع نکن. هر چند روز یک فنجان کمتر.</li>
+      <li>یک روز جا موندن مشکلی نیست. فقط دو روز پشت سر هم جا نمونه.</li>
+      <li>اگه بعد از ۲ تا ۳ ماه با اجرای منظم تغییر کمی دیدی، نوروفیدبک یا تراپی رو دوباره در نظر بگیر.</li>
+    </ul>
+  </aside>
+
+  <section class="backup" aria-labelledby="bh">
+    <h2 id="bh">پشتیبان‌گیری</h2>
+    <p class="muted small">اطلاعاتت فقط روی همین گوشیه. اگه اپ رو پاک کنی، از بین می‌ره. ماهی یک بار یک فایل پشتیبان بگیر و در Files یا iCloud نگه دار.</p>
+    <div class="btns">
+      <button type="button" id="export">گرفتن فایل پشتیبان</button>
+      <label class="btn" for="import">بازگرداندن از فایل</label>
+      <input type="file" id="import" accept=".json,application/json" hidden>
+    </div>
+    <p class="small muted" id="bmsg" aria-live="polite"></p>
+  </section>
+
+  <section class="install" id="install" hidden>
+    <b>نصب روی آیفون</b>
+    <span>در Safari دکمه اشتراک‌گذاری (مربع با فلش رو به بالا) رو بزن، بعد «Add to Home Screen» رو انتخاب کن.</span>
+  </section>
+</div>
+
+<script>
+const HABITS=[
+ {g:"sleep",id:"wake",t:"بیدار شدن در ساعت ثابت",h:"حتی آخر هفته",top:1},
+ {g:"sleep",id:"light",t:"۱۰ دقیقه نور صبح",h:"تا ۳۰ دقیقه بعد از بیدار شدن",top:1},
+ {g:"sleep",id:"coffee",t:"قهوه ۶۰ تا ۹۰ دقیقه بعد از بیدار شدن",h:"نه بلافاصله"},
+ {g:"sleep",id:"nocaf",t:"بعد از ساعت ۲ کافئین نخوردم",h:"قهوه، چای پررنگ، انرژی‌زا",top:1},
+ {g:"sleep",id:"nophone",t:"یک ساعت قبل از خواب بدون گوشی",h:"نور کم، اتاق خنک"},
+ {g:"sleep",id:"dump",t:"خالی کردن ذهن روی کاغذ",h:"۵ دقیقه قبل از خواب"},
+ {g:"calm",id:"breathAM",t:"تنفس آهسته صبح",h:"۵ ثانیه دم، ۵ ثانیه بازدم، ۱۰ دقیقه",top:1},
+ {g:"calm",id:"breathPM",t:"تنفس آهسته شب",h:"۱۰ دقیقه قبل از خواب",top:1},
+ {g:"calm",id:"exercise",t:"ورزش هوازی ۳۰ دقیقه",h:"هدف: ۴ تا ۵ روز در هفته",top:1},
+ {g:"calm",id:"nsdr",t:"ریلکسیشن عمیق (NSDR)",h:"اختیاری، ۱۵ دقیقه به جای قهوه عصر"},
+ {g:"focus",id:"phoneaway",t:"گوشی در اتاق دیگه موقع کار",h:"اعلان‌ها خاموش",top:1},
+ {g:"focus",id:"three",t:"۳ کار اصلی امروز رو نوشتم",h:"اول همین ۳ تا"},
+ {g:"focus",id:"pomodoro",t:"سخت‌ترین کار اول، با پومودورو",h:"۲۵ دقیقه کار، ۵ دقیقه استراحت",top:1},
+ {g:"focus",id:"meditate",t:"مدیتیشن تمرکز روی نفس",h:"از ۵ دقیقه شروع کن"},
+ {g:"focus",id:"book",t:"۲۰ دقیقه کتاب کاغذی",h:"بدون گوشی"},
+ {g:"focus",id:"noreels",t:"ویدیوی کوتاه کمتر از ۳۰ دقیقه",h:"ریلز، شورتس، تیک‌تاک"},
+ {g:"memory",id:"protein",t:"صبحانه پروتئینی",h:"تخم‌مرغ، پنیر، ماست، مغزها"},
+ {g:"memory",id:"water",t:"آب کافی",h:"۶ تا ۸ لیوان"},
+ {g:"memory",id:"notes",t:"همه‌چیز رو در یک جا نوشتم",h:"به حافظه تکیه نکردم"},
+ {g:"memory",id:"recall",t:"خلاصه کردن بعد از خوندن",h:"۱ دقیقه با کلمات خودم"},
+];
+// The "top 5" are habit groups; several rows serve one of them (breathing AM/PM, phone+pomodoro).
+const TOP_IDS=HABITS.filter(h=>h.top).map(h=>h.id);
+const GROUPS={sleep:["خواب و انرژی صبح","از هفته ۱"],calm:["آرام کردن سیستم عصبی","از هفته ۲"],focus:["تمرکز","از هفته ۳"],memory:["حافظه و بدن","از هفته ۳"]};
+const METRICS=[["morning","سرحالی صبح"],["sleep","کیفیت خواب"],["calm","آرامش (کم بودن اضطراب)"],["focus","تمرکز"],["memory","حافظه"]];
+const DAYS=["شنبه","یکشنبه","دوشنبه","سه‌شنبه","چهارشنبه","پنجشنبه","جمعه"];
+
+const fa=n=>String(n).replace(/\d/g,d=>"۰۱۲۳۴۵۶۷۸۹"[d]);
+const pdate=d=>new Intl.DateTimeFormat("fa-IR-u-ca-persian",{day:"numeric",month:"long"}).format(d);
+const pdayNum=d=>new Intl.DateTimeFormat("fa-IR-u-ca-persian",{day:"numeric"}).format(d);
+function satOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const back=(x.getDay()+1)%7;x.setDate(x.getDate()-back);return x}
+const keyOf=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+
+let week=satOf(new Date());
+let topOnly=false;
+const weeks={}; // key -> {checks:{id:[7 bools]}, ratings:{metric:number}}
+
+const $=id=>document.getElementById(id);
+
+function wk(k){return weeks[k]||(weeks[k]={checks:{},ratings:{}})}
+function todayIdx(){const k=keyOf(week);if(k!==keyOf(satOf(new Date())))return -1;return (new Date().getDay()+1)%7}
+
+function render(){
+  const k=keyOf(week),w=wk(k),ti=todayIdx();
+  $("weeklabel").textContent=`${pdate(week)} تا ${pdate(addDays(week,6))}`;
+  const list=topOnly?HABITS.filter(h=>h.top):HABITS;
+  let html=`<div class="row head"><div class="label"></div>`+DAYS.map((d,i)=>`<div class="d${i===ti?" today":""}">${d.slice(0,i===2||i===3?3:2)}<br>${pdayNum(addDays(week,i))}</div>`).join("")+`</div>`;
+  let g=null;
+  for(const h of list){
+    if(h.g!==g){g=h.g;html+=`<div class="group"><h3>${GROUPS[g][0]}</h3><small>${GROUPS[g][1]}</small></div>`}
+    const arr=w.checks[h.id]||[];
+    html+=`<div class="row"><div class="label"><span class="t">${h.t}${h.top?'<span class="star" aria-label="کار اصلی">★</span>':""}</span><span class="h">${h.h}</span></div>`+
+      DAYS.map((d,i)=>`<div class="cell"><input type="checkbox" id="c-${h.id}-${i}" data-h="${h.id}" data-i="${i}" ${arr[i]?"checked":""} class="${i===ti?"today":""}" aria-label="${h.t}، ${d}"></div>`).join("")+`</div>`;
+  }
+  const perDay=DAYS.map((_,i)=>list.filter(h=>(w.checks[h.id]||[])[i]).length);
+  html+=`<div class="row foot"><div class="label">تعداد در روز</div>`+perDay.map(n=>`<div class="d">${fa(n)}</div>`).join("")+`</div>`;
+  $("grid").innerHTML=html;
+
+  const total=HABITS.length*7, done=HABITS.reduce((s,h)=>s+(w.checks[h.id]||[]).filter(Boolean).length,0);
+  $("s-week").textContent=fa(Math.round(done/total*100))+"٪";
+  const topDone=TOP_IDS.reduce((s,id)=>s+(w.checks[id]||[]).filter(Boolean).length,0);
+  $("s-top").textContent=`${fa(topDone)} از ${fa(TOP_IDS.length*7)}`;
+  $("s-today").textContent=ti<0?"—":fa(HABITS.filter(h=>(w.checks[h.id]||[])[ti]).length);
+
+  $("rates").innerHTML=METRICS.map(([m,l])=>{const v=w.ratings[m];const set=typeof v==="number";
+    return `<div class="rate${set?"":" unset"}"><label for="r-${m}">${l}</label><input type="range" id="r-${m}" data-m="${m}" min="0" max="10" step="1" value="${set?v:5}"><output id="o-${m}">${set?fa(v):"—"}</output></div>`}).join("");
+  renderTrend();
+}
+
+function renderTrend(){
+  const keys=Object.keys(weeks).filter(k=>Object.keys(weeks[k].ratings||{}).length).sort().slice(-12);
+  if(!keys.length){$("trend").innerHTML=`<div class="empty">هنوز نمره‌ای ثبت نشده. اولین نمره‌ها رو همین هفته بده تا روند اینجا نمایش داده بشه.</div>`;return}
+  const cur=keyOf(week);
+  $("trend").innerHTML=METRICS.map(([m,l])=>`<div class="trow"><span class="small">${l}</span><div class="bars">`+
+    keys.map(k=>{const v=weeks[k].ratings[m];const hgt=typeof v==="number"?Math.max(5,v*10):0;return `<i class="${k===cur?"cur":""}" style="height:${hgt}%" title="${pdate(new Date(k+"T00:00"))}: ${typeof v==="number"?fa(v):"—"}"></i>`}).join("")+`</div></div>`).join("")+
+    `<p class="muted small">هر ستون یک هفته‌ست. ستون نارنجی هفته‌ای هست که الان نگاه می‌کنی.</p>`;
+}
+
+const STORE="habit-weeks-v1";
+let saveTimer=null;
+function saveAll(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{localStorage.setItem(STORE,JSON.stringify(weeks));setStatus("ذخیره شد، روی همین گوشی")}
+    catch(e){setStatus("ذخیره نشد. فضای مرورگر پر یا مسدوده.")}
+  },300);
+}
+function save(){saveAll()}
+function setStatus(s){$("status").textContent=s}
+
+document.addEventListener("change",e=>{
+  const t=e.target;if(!t.dataset||!t.dataset.h)return;
+  const k=keyOf(week),w=wk(k),arr=(w.checks[t.dataset.h]||=[false,false,false,false,false,false,false]);
+  arr[+t.dataset.i]=t.checked;render();save(k);
+});
+document.addEventListener("input",e=>{
+  const t=e.target;if(!t.dataset||!t.dataset.m)return;
+  const k=keyOf(week),w=wk(k);w.ratings[t.dataset.m]=+t.value;
+  $("o-"+t.dataset.m).textContent=fa(t.value);t.parentElement.classList.remove("unset");renderTrend();save(k);
+});
+$("prev").onclick=()=>{week=addDays(week,-7);render()};
+$("next").onclick=()=>{week=addDays(week,7);render()};
+$("thisweek").onclick=()=>{week=satOf(new Date());render()};
+$("f-all").onclick=()=>{topOnly=false;$("f-all").setAttribute("aria-pressed","true");$("f-top").setAttribute("aria-pressed","false");render()};
+$("f-top").onclick=()=>{topOnly=true;$("f-top").setAttribute("aria-pressed","true");$("f-all").setAttribute("aria-pressed","false");render()};
+
+function loadAll(){
+  try{const d=JSON.parse(localStorage.getItem(STORE)||"{}");for(const k in d){weeks[k]={checks:d[k].checks||{},ratings:d[k].ratings||{}}}}catch(e){}
+}
+function msg(t){$("bmsg").textContent=t}
+$("export").onclick=async()=>{
+  const name="habit-backup-"+keyOf(new Date())+".json";
+  const blob=new Blob([JSON.stringify({app:"habit",version:1,weeks},null,1)],{type:"application/json"});
+  try{
+    const file=new File([blob],name,{type:"application/json"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});msg("فایل پشتیبان آماده شد.");return}
+  }catch(e){if(e&&e.name==="AbortError")return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);msg("فایل پشتیبان ذخیره شد.");
+};
+$("import").onchange=async e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  try{
+    const d=JSON.parse(await f.text());const w=d&&d.weeks;if(!w||typeof w!=="object")throw 0;
+    let n=0;for(const k in w){if(!/^\d{4}-\d{2}-\d{2}$/.test(k))continue;weeks[k]={checks:w[k].checks||{},ratings:w[k].ratings||{}};n++}
+    saveAll();render();msg(`${fa(n)} هفته بازگردانده شد.`);
+  }catch(err){msg("این فایل، فایل پشتیبان این اپ نیست.")}
+  e.target.value="";
+};
+const standalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+if(!standalone&&/iPhone|iPad|iPod/.test(navigator.userAgent))$("install").hidden=false;
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+
+loadAll();
+render();
+</script>
+
+</body>
+</html>
